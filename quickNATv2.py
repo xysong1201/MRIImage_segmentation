@@ -190,10 +190,4 @@ class QuickNAT(nn.Module):
 # In[10]:
 
 
-### Test of QuickNAT
-net = QuickNAT(1, 64, 256)
-bs = 4
-a = torch.rand(bs,1,128,128)
-b = net(a)
-print(b.size())
 
