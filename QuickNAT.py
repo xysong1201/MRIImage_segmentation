@@ -4,21 +4,30 @@
 # In[1]:
 
 
-import numpy as np
 import torch
 import torch.nn as nn
-from enum import Enum
-
+import torch.optim as optim
 import torch.nn.functional as F
+import os
+from torch.utils.data import Dataset, DataLoader
+import matplotlib.pyplot as plt
+from skimage import io
+from torchvision import transforms, utils
+import numpy as np
+from PIL import Image
+from random import randint
+import time
 
 
 # In[2]:
 
 
+
+
 class DenseBlock(nn.Module):
     '''
     param:
-    in_channel, out_channel, drop_out
+    in_channel, out_channel
     '''
 
     def __init__(self, in_channel, out_channel):
@@ -37,7 +46,6 @@ class DenseBlock(nn.Module):
         
         self.outconv = nn.Conv2d(2*out_channel+in_channel, out_channel, kernel_size = 1)
         
-
     def forward(self, x):
         x1 = self.block1(x)
         x2 = torch.cat((x, x1), dim=1)
@@ -49,7 +57,7 @@ class DenseBlock(nn.Module):
         return out
 
 
-# In[3]:
+# In[4]:
 
 
 class down(nn.Module):
@@ -62,10 +70,9 @@ class down(nn.Module):
         x1, indices = self.maxpool(x)
         x1 = self.conv(x1)
         return x1, indices
-    
 
 
-# In[4]:
+# In[5]:
 
 
 class BottleNeck(nn.Module):
@@ -83,27 +90,25 @@ class BottleNeck(nn.Module):
         return x, indices
 
 
-# In[5]:
+# In[6]:
 
 
 class up(nn.Module):
-    def __init__(self, in_channel, out_channel, indice = None, output_size=None):
+    def __init__(self, in_channel, out_channel ):
         super(up, self).__init__()
         self.unpool = nn.MaxUnpool2d(2, stride=2)
         self.conv = DenseBlock(in_channel*2, out_channel)
-        self.indice = indice
-        self.output_size = output_size
+      
     
-    def forward(self, x1, x2):
-        x1 = self.unpool(x1,self.indice, self.output_size)
+    def forward(self, x1, x2, indice = None, output_size=None):
+        x1 = self.unpool(x1, indice, output_size)
         x = torch.cat([x1,x2], dim = 1)
         x = self.conv(x)
         
         return x
-        
 
 
-# In[6]:
+# In[7]:
 
 
 class OutConv(nn.Module):
@@ -113,10 +118,9 @@ class OutConv(nn.Module):
     def forward(self,x):
         x = self.conv(x)
         return x
-    
 
 
-# In[7]:
+# In[8]:
 
 
 class Encoder(nn.Module):
@@ -138,56 +142,46 @@ class Encoder(nn.Module):
         x5, idx4 = self.BottleNeck(x4)
         
         return x5, x4, x3, x2, x1, idx1, idx2, idx3, idx4
-           
-    
-
-
-# In[8]:
-
-
-class Decoder(nn.Module):
-    def __init__(self, in_channel, out_class, idx1, idx2, idx3, idx4, x4,x3,x2,x1):
-        super(Decoder, self).__init__()
-        
-        self.up1 = up(in_channel, in_channel, indice = idx4, output_size=x4.size())
-        self.up2 = up(in_channel, in_channel, indice = idx3, output_size=x3.size())
-        self.up3 = up(in_channel, in_channel, indice = idx2, output_size=x2.size())
-        self.up4 = up(in_channel, in_channel, indice = idx1,output_size=x1.size())     
-        
-        self.conv_out = OutConv(in_channel, out_class)
-        self.x4 = x4
-        self.x3 = x3
-        self.x2 = x2
-        self.x1 = x1
-    
-    def forward(self,x):
-        x = self.up1(x,self.x4)
-        x = self.up2(x,self.x3)
-        x = self.up3(x,self.x2)
-        x = self.up4(x,self.x1)
-        x = self.conv_out(x)
-        x = F.log_softmax(x, dim =1)
-        return x
-        
 
 
 # In[9]:
 
 
-class QuickNAT(nn.Module):
-    def __init__(self, in_channel, num_channel, out_class):
-        super(QuickNAT, self).__init__()
-        self.encoder = Encoder(in_channel, num_channel)
-        self.num_channel = num_channel
-        self.out_class = out_class
-    def forward(self,x):
-        x5, x4, x3, x2, x1, idx1, idx2, idx3, idx4 = self.encoder(x)
-        decoder = Decoder(self.num_channel, self.out_class, idx1, idx2, idx3, idx4, x4,x3,x2,x1)
-        x = decoder(x5)
-        return x
+class Decoder(nn.Module):
+    def __init__(self, in_channel, out_class):
+        super(Decoder, self).__init__()
+        
+        self.up1 = up(in_channel, in_channel)
+        self.up2 = up(in_channel, in_channel)
+        self.up3 = up(in_channel, in_channel)
+        self.up4 = up(in_channel, in_channel)
+        self.conv_out = OutConv(in_channel, out_class)
+
+    
+    def forward(self,x, idx1, idx2, idx3, idx4, x4,x3,x2,x1):
+        x = self.up1.forward(x,x4,idx4)
+        x = self.up2.forward(x,x3,idx3)
+        x = self.up3.forward(x,x2,idx2)
+        x = self.up4.forward(x,x1,idx1)
+        x = self.conv_out(x)
+        x = F.log_softmax(x, dim =1)
+        return x       
 
 
 # In[10]:
 
 
+class QuickNAT(nn.Module):
+    def __init__(self, in_channel, num_channel, out_class):
+        super(QuickNAT, self).__init__()
+        self.in_channel = in_channel
+        self.num_channel = num_channel
+        self.out_class = out_class
+        self.encoder = Encoder(self.in_channel, self.num_channel)
+        self.decoder = Decoder(self.num_channel, self.out_class)
+        
+    def forward(self,x):
+        x5, x4, x3, x2, x1, idx1, idx2, idx3, idx4 = self.encoder(x)
+        x = self.decoder.forward(x5, idx1, idx2, idx3, idx4, x4,x3,x2,x1)
+        return x
 
