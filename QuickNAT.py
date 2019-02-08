@@ -10,7 +10,6 @@ import torch.optim as optim
 import torch.nn.functional as F
 import os
 from torch.utils.data import Dataset, DataLoader
-import matplotlib.pyplot as plt
 from skimage import io
 from torchvision import transforms, utils
 import numpy as np
