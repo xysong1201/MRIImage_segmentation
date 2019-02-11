@@ -95,24 +95,27 @@ class TrainDataset(Dataset):
 logs = {}
 for iteration in range(50):
     start=time.time()
-    for sub_idx in range(0,330,2):
+    for sub_idx in range(0,330,3):
 
         T1a_dir = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx)
         T1a_dir2 = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx+1)
+        T1a_dir3 = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx+2)
    
         parc5a_dir = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx)
         parc5a_dir2 = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx+1)
+        parc5a_dir3 = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx+2)
         
         train_data = TrainDataset(T1a_dir=T1a_dir, parc5a_dir = parc5a_dir)
         train_data2 = TrainDataset(T1a_dir=T1a_dir2, parc5a_dir = parc5a_dir2)
+        train_data3 = TrainDataset(T1a_dir=T1a_dir3, parc5a_dir = parc5a_dir3)
         
-        total_data = train_data + train_data2
+        total_data = train_data + train_data2 + train_data3
         dataloader = DataLoader(total_data, batch_size = 5, shuffle = True, num_workers = 4)
     
         criterion = nn.NLLLoss()
         optimizer = optim.Adam(model.parameters() ,lr=0.001)
     
-        for epoch in range(0,400):
+        for epoch in range(0,20):
            
             # define the running loss
             running_loss = 0

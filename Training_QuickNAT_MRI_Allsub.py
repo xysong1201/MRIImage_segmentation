@@ -1,3 +1,9 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
 import os
 from torch.utils.data import Dataset, DataLoader
 from skimage import io, transform
@@ -13,12 +19,17 @@ import QuickNAT as QN
 import torch.nn as nn
 
 
+# In[2]:
+
+
 gpu_id = 1
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
 device = torch.device('cuda')
 
+
+# In[3]:
 
 
 model = QN.QuickNAT(1,64,256)
@@ -30,6 +41,7 @@ print(nb_param)
 model = model.to(device)
 
 
+# In[4]:
 
 
 class TrainDataset(Dataset):
@@ -90,70 +102,78 @@ class TrainDataset(Dataset):
         return sample
 
 
-# In[ ]:
+# In[5]:
 
-logs = {}
-for iteration in range(50):
-    start=time.time()
-    for sub_idx in range(0,330,2):
+
+sub_idx = 0
+T1a_dir = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx)
+parc5a_dir = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx)
+total_data = TrainDataset(T1a_dir=T1a_dir, parc5a_dir = parc5a_dir)
+print(len(total_data))
+
+
+# In[6]:
+
+
+for sub_idx in range(1,330):
 
         T1a_dir = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx)
-        T1a_dir2 = '/home/xiaoyu/MRIdata/T1w/axial/sub{}'.format(sub_idx+1)
-   
+        
         parc5a_dir = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx)
-        parc5a_dir2 = '/home/xiaoyu/MRIdata/parc_5/axial/sub{}'.format(sub_idx+1)
-        
+    
         train_data = TrainDataset(T1a_dir=T1a_dir, parc5a_dir = parc5a_dir)
-        train_data2 = TrainDataset(T1a_dir=T1a_dir2, parc5a_dir = parc5a_dir2)
-        
-        total_data = train_data + train_data2
-        dataloader = DataLoader(total_data, batch_size = 5, shuffle = True, num_workers = 4)
-    
-        criterion = nn.NLLLoss()
-        optimizer = optim.Adam(model.parameters() ,lr=0.001)
-    
-        for epoch in range(0,400):
-           
-            # define the running loss
-            running_loss = 0
-            running_error = 0
-            num_batches=0
-      
-            for i_batch, sample_batched in enumerate(dataloader):
-        
-                optimizer.zero_grad()
-        
-                #get the inputs
-                inputs, labels = sample_batched['T1a'], sample_batched['parc5a']
-        
-                inputs = inputs.to(device)
-                labels = labels.to(device)
+        total_data += train_data
+print(len(total_data))
 
-                inputs.requires_grad_()
+
+# In[7]:
+
+
+start=time.time()
+dataloader = DataLoader(total_data, batch_size = 5, shuffle = True, num_workers = 4)
+print(len(dataloader))
+criterion = nn.NLLLoss()
+optimizer = optim.Adam(model.parameters() ,lr=0.001)
+
+
+# In[ ]:
+
+
+for epoch in range(0,20):
+    running_loss = 0
+    num_batches = 0
+    for i_batch, sample_batched in enumerate(dataloader):
+        optimizer.zero_grad()
         
-                #forward + backward +optimize
-                scores = model(inputs)
+        #get the inputs
+        inputs, labels = sample_batched['T1a'], sample_batched['parc5a']
+        
+        inputs = inputs.to(device)
+        labels = labels.to(device)
+
+        inputs.requires_grad_()
+        
+        #forward + backward +optimize
+        scores = model(inputs)
           
-                # Define the loss
-                loss = criterion(scores, labels.long()) 
-                loss.backward()
-                optimizer.step()
+        # Define the loss
+        loss = criterion(scores, labels.long()) 
+        loss.backward()
+        optimizer.step()
         
-                # compute and accumulate stats
-                running_loss += loss.detach().item()
+        # compute and accumulate stats
+        running_loss += loss.detach().item()
        
-                num_batches+=1 
-    
-            # AVERAGE STATS THEN DISPLAY    
-            total_loss = running_loss/num_batches
+        num_batches+=1 
+        
+    # AVERAGE STATS THEN DISPLAY    
+    total_loss = running_loss/num_batches
    
-            elapsed = (time.time()-start)/60
+    elapsed = (time.time()-start)/60
         
-            print('epoch=',epoch, '\t time=', elapsed,'min', '\t loss=', total_loss )
-            logs['log loss'] = total_loss
+    print('epoch=',epoch, '\t time=', elapsed,'min', '\t loss=', total_loss )
+   
+print('Finish Training')
            
-       
-        print('Finish Training')
-    print(iteration,'Iteration')
-print(logs)
+            
 
