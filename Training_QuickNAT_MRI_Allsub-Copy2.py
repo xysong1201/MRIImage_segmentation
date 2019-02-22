@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 device = torch.device('cuda')
 
 
-model = QN.QuickNAT(1,64,256)
+model = QN.QuickNAT(1,32,256)
 model_params = list(model.parameters())
 nb_param=0
 for param in model.parameters():
@@ -112,7 +112,7 @@ print('length of total data:',len(total_data))
 
 
 start=time.time()
-dataloader = DataLoader(total_data, batch_size = 5, shuffle = True, num_workers = 4)
+dataloader = DataLoader(total_data, batch_size = 10, shuffle = True, num_workers = 4)
 print('length of dataloader',len(dataloader))
 criterion = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters() ,lr=0.001)

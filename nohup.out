@@ -1,0 +1,11 @@
+Model's parameter number: 3308688
+length of total data: 60060
+length of dataloader 12012
+Traceback (most recent call last):
+  File "Training_QuickNAT_MRI_Allsub-Copy1.py", line 142, in <module>
+    loss.backward()
+  File "/home/xiaoyu/miniconda3/envs/deep_mol/lib/python3.6/site-packages/torch/tensor.py", line 102, in backward
+    torch.autograd.backward(self, gradient, retain_graph, create_graph)
+  File "/home/xiaoyu/miniconda3/envs/deep_mol/lib/python3.6/site-packages/torch/autograd/__init__.py", line 90, in backward
+    allow_unreachable=True)  # allow_unreachable flag
+KeyboardInterrupt

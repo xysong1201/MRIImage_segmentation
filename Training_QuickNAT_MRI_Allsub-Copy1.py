@@ -26,7 +26,7 @@ os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 device = torch.device('cuda')
 
 
-model = QN.QuickNAT(1,64,256)
+model = QN.QuickNAT(1,128,256)
 model_params = list(model.parameters())
 nb_param=0
 for param in model.parameters():
