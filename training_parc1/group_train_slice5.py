@@ -68,7 +68,7 @@ print(len(dataloader_0))
 
 
 start=time.time()
-model = QN.QuickNAT(1,64,178)
+model = QN.QuickNAT(1,128,178)
 nb_param=0
 for param in model.parameters():
     nb_param+=np.prod(list(param.data.size()))
@@ -80,7 +80,7 @@ scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
 
 # In[7]:
-print('Slice group ID: ',slice_idx)
+print('Slice group ID: ', slice_idx)
 
 for epoch in range(0,720):
     running_loss = 0

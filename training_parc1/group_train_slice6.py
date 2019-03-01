@@ -5,7 +5,7 @@
 
 
 import os
-from torch.utils.data import Dataset, DataLoader, ConcatDataset,  WeightedRandomSampler
+from torch.utils.data import Dataset, DataLoader, ConcatDataset
 from skimage import io, transform
 from torchvision import transforms, utils
 import torch
@@ -18,7 +18,6 @@ import time
 import QuickNAT as QN
 import torch.nn as nn
 from my_Dataset import TrainDataset
-from weight_axial import weight
 import sys
 
 
@@ -26,12 +25,10 @@ import sys
 sys.setrecursionlimit(10000)
 
 
-
-
 # In[2]:
 
 
-gpu_id = 1
+gpu_id = 0
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
@@ -43,10 +40,10 @@ print(device)
 
 
 sub_idx = 0
-slice_idx = 5
+slice_idx = 6
 T1a_dir = '/home/xiaoyu/MRIdata_group/T1w/axial/sub{}/slice{}'.format(sub_idx,slice_idx)
 parc1a_dir = '/home/xiaoyu/MRIdata_group/parc_1/axial/sub{}/slice{}'.format(sub_idx,slice_idx)
-total_data = TrainDataset(T1a_dir=T1a_dir, parc1a_dir = parc1a_dir)
+total_data_0 = TrainDataset(T1a_dir=T1a_dir, parc1a_dir = parc1a_dir)
 
 
 # In[4]:
@@ -56,19 +53,18 @@ for sub_idx in range(1,330):
     T1a_dir = '/home/xiaoyu/MRIdata_group/T1w/axial/sub{}/slice{}'.format(sub_idx,slice_idx)
     parc1a_dir = '/home/xiaoyu/MRIdata_group/parc_1/axial/sub{}/slice{}'.format(sub_idx,slice_idx)
     train_data = TrainDataset(T1a_dir=T1a_dir, parc1a_dir = parc1a_dir)
-    total_data = total_data + train_data
-print(len(total_data))
+    total_data_0 = total_data_0 + train_data
+print(len(total_data_0))
 
 
-
-# In[8]:
-print('The slice id is:',slice_idx)
-
-dataloader = DataLoader(total_data, batch_size = 4, shuffle = True, num_workers = 4)
-print(len(dataloader))
+# In[5]:
 
 
-# In[9]:
+dataloader_0 = DataLoader(total_data_0, batch_size = 4, shuffle = True, num_workers = 4)
+print(len(dataloader_0))
+
+
+# In[6]:
 
 
 start=time.time()
@@ -77,26 +73,20 @@ nb_param=0
 for param in model.parameters():
     nb_param+=np.prod(list(param.data.size()))
 print(nb_param)
-
-
-# In[12]:
-
-
 model = model.to(device)
-weight = weight.to(device)
-criterion = nn.NLLLoss(weight = weight)
+criterion = nn.NLLLoss()
 optimizer = optim.Adam(model.parameters() ,lr=0.001)
-# scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
+scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=30, gamma=0.1)
 
 
-# In[ ]:
-
+# In[7]:
+print('Slice group ID: ', slice_idx)
 
 for epoch in range(0,720):
     running_loss = 0
     num_batches = 0
-#     scheduler.step()
-    for i_batch, sample_batched in enumerate(dataloader):
+    scheduler.step()
+    for i_batch, sample_batched in enumerate(dataloader_0):
     
         optimizer.zero_grad()
         
@@ -135,5 +125,4 @@ for epoch in range(0,720):
 print('Finish Training')
 
 
-# In[12]:
 
