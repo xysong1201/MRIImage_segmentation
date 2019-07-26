@@ -289,7 +289,7 @@ def check_cifar_dataset_exists(path_data='../../data/'):
     
         
 
-def check_imagenet_dataset_exists(path_data='../../data/'):
+def check_imagenet_dataset_exists(path_data='/data/victor/'):
     flag_train_data = os.path.isfile(path_data + 'imagenet/train_data.pt') 
     flag_train_label = os.path.isfile(path_data + 'imagenet/train_label.pt') 
     flag_test_data = os.path.isfile(path_data + 'imagenet/test_data.pt') 

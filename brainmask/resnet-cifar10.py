@@ -1,9 +1,3 @@
-
-# coding: utf-8
-
-# In[1]:
-
-
 import torch
 import numpy as np
 import os.path
@@ -13,13 +7,6 @@ import time
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-
-
-# ### Download the CIFAR dataset 
-# * 50000 32 * 32 RGB training image 
-# * 10000 32 * 32 RGB test image
-
-# In[2]:
 
 
 from utils import check_cifar_dataset_exists
@@ -171,7 +158,7 @@ print(y.size())
 # In[ ]:
 
 
-gpu_id = 1
+gpu_id = 0
 os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"] = str(gpu_id)
 
@@ -340,94 +327,4 @@ for epoch in range(1,64000):
            
     
 
-
-# In[ ]:
-
-
-# import matplotlib.pyplot as plt
-# def show(X):
-#     if X.dim() == 3 and X.size(0) == 3:
-#         plt.imshow( np.transpose(  X.numpy() , (1, 2, 0))  )
-#         plt.show()
-#     elif X.dim() == 2:
-#         plt.imshow(   X.numpy() , cmap='gray'  )
-#         plt.show()
-#     else:
-#         print('WRONG TENSOR SIZE')
-
-
-# In[ ]:
-
-
-# def show_prob_cifar(p):
-
-
-#     p=p.data.squeeze().numpy()
-
-#     ft=15
-#     label = ('airplane', 'automobile', 'Bird', 'Cat', 'Deer', 'Dog', 'Frog', 'Horse', 'Ship','Truck' )
-#     #p=p.data.squeeze().numpy()
-#     y_pos = np.arange(len(p))*1.2
-#     target=2
-#     width=0.9
-#     col= 'blue'
-#     #col='darkgreen'
-
-#     plt.rcdefaults()
-#     fig, ax = plt.subplots()
-
-#     # the plot
-#     ax.barh(y_pos, p, width , align='center', color=col)
-
-#     ax.set_xlim([0, 1.3])
-#     #ax.set_ylim([-0.8, len(p)*1.2-1+0.8])
-
-#     # y label
-#     ax.set_yticks(y_pos)
-#     ax.set_yticklabels(label, fontsize=ft)
-#     ax.invert_yaxis()  
-#     #ax.set_xlabel('Performance')
-#     #ax.set_title('How fast do you want to go today?')
-
-#     # x label
-#     ax.set_xticklabels([])
-#     ax.set_xticks([])
-#     #x_pos=np.array([0, 0.25 , 0.5 , 0.75 , 1])
-#     #ax.set_xticks(x_pos)
-#     #ax.set_xticklabels( [0, 0.25 , 0.5 , 0.75 , 1] , fontsize=15)
-
-#     ax.spines['right'].set_visible(False)
-#     ax.spines['top'].set_visible(False)
-#     ax.spines['bottom'].set_visible(False)
-#     ax.spines['left'].set_linewidth(4)
-
-
-#     for i in range(len(p)):
-#         str_nb="{0:.2f}".format(p[i])
-#         ax.text( p[i] + 0.05 , y_pos[i] ,str_nb ,
-#                  horizontalalignment='left', verticalalignment='center',
-#                  transform=ax.transData, color= col,fontsize=ft)
-#     plt.show()
-
-
-# In[ ]:
-
-
-# # choose a picture at random
-# from random import randint
-# idx=randint(0, 10000-1)
-# im=test_data[idx]
-
-# # diplay the picture
-# show(im)
-
-# # send to device, rescale, and view as a batch of 1 
-# im = im.to(device)
-# im= (im-mean) / std
-# im=im.view(1,3,32,32)
-
-# # feed it to the net and display the confidence scores
-# scores =  model(im) 
-# probs= F.softmax(scores, dim=1)
-# show_prob_cifar(probs.cpu())
 

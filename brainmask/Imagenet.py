@@ -12,12 +12,13 @@ import torchvision.transforms as transforms
 # In[ ]:
 
 
-path_data = '../../data'
+path = '~/'
+print(path)
 
 
 # In[ ]:
 
 
-trainset = torchvision.datasets.ImageNet(root=path_data + '/ImageNet/temp', train=True,
+trainset = torchvision.datasets.ImageNet(root=path + '/ImageNet/temp', train=True,
                                                 download=True, transform=transforms.ToTensor())
 
